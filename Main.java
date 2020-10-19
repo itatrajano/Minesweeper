@@ -503,20 +503,20 @@ public class Main {
 
         //System.out.print("How many mines do you want on the field? ");
         //int numberOfMines = scanner.nextInt();
+        int numberOfMines = 3;
 
         final int width = 9;
         final int height = 9;
 
-        //int freePlaces = width * height - numberOfMines;
+        int freePlaces = width * height - numberOfMines;
         int visibleFreePlaces = 0;
         boolean foundAllMines = false;
 
         MineField minefield = new MineField(height,width);
         //minefield.randomMines(numberOfMines);
-        minefield.setMineInAField(2,0);
-        minefield.setMineInAField(2,2);
-        minefield.setMineInAField(8,1);
-        int numberOfMines = 3;
+        minefield.setMineInAField(2,0); // 1 , 3
+        minefield.setMineInAField(2,2); // 3 , 3
+        minefield.setMineInAField(8,1); // 2 , 9
 
         minefield.updateMinesAlert();
         minefield.printField();
@@ -552,12 +552,30 @@ public class Main {
                     minefield.printField();
                     if (minefield.hasMine(b, a)) {
                         break;
+                    } else {
+                        //Conta a quantidade de Places visíveis e armazena na variável visibleFreePlaces
+                        int tempFreePlaces = 0;
+                        for (int i = 0; i < height; i++) {
+                            for (int j = 0; j < width; j++) {
+                                if (minefield.isVisible(i, j) == Visibility.VISIBLE) {
+                                    tempFreePlaces++;
+                                }
+                            }
+                        }
+                        visibleFreePlaces = tempFreePlaces;
+                        if (visibleFreePlaces == freePlaces) { //Verifica se o jogo foi vencido.
+                            break;
+                        }
                     }
                 }
             }
+            //SE O LOCAL ESCOLHIDO JÁ ESTIVER VISÍVEL
+            else {
+                System.out.println("This place is already free!");
+            }
         }
 
-        if (foundAllMines) {
+        if (foundAllMines || visibleFreePlaces == freePlaces) {
             System.out.println("Congratulations! You found all mines!");
         } else {
             System.out.println("Game Over!");
