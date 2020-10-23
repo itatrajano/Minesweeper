@@ -1,3 +1,3 @@
 # Minesweeper
  
-Rules to end the game are not fully implemented yet.
+Concluded. Code approved at the course tests.
