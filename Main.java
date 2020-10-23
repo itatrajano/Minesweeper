@@ -167,20 +167,21 @@ class MineField {
 
     }
 
-    public void randomMines ( int numberOfMines){
-            Random random = new Random();
-            for (int i = 0; i < numberOfMines; i++) {
-                boolean isMineSet = false;
-                while (!isMineSet) {
-                    int a = random.nextInt(places.length); //Sorteia uma linha
-                    int b = random.nextInt(places[0].length); //Sorteia uma coluna
-                    if (!hasMine(a, b)) { //Se não houver uma mina, planta uma.
-                        setMineInAField(a, b);
-                        isMineSet = true;
-                    }
+    public void addRandomMines(int numberOfMines){
+        Random random = new Random();
+
+        for (int i = 0; i < numberOfMines; i++) {
+            boolean isMineSet = false;
+            while (!isMineSet) {
+                int a = random.nextInt(places.length); //Sorteia uma linha
+                int b = random.nextInt(places[0].length); //Sorteia uma coluna
+                if (!hasMine(a, b)) { //Se não houver uma mina, planta uma.
+                    setMineInAField(a, b);
+                    isMineSet = true;
                 }
             }
         }
+    }
 
     public void updateMinesAlert() {
         int height = places.length;
@@ -500,7 +501,6 @@ public class Main {
     public static void main(String[] args) {
 
         Scanner scanner = new Scanner(System.in);
-
         System.out.print("How many mines do you want on the field? ");
         int numberOfMines = scanner.nextInt();
         System.out.println();
@@ -512,47 +512,60 @@ public class Main {
         int visibleFreePlaces = 0;
 
         MineField minefield = new MineField(height,width);
-        minefield.randomMines(numberOfMines);
+        minefield.addRandomMines(numberOfMines);
         minefield.updateMinesAlert();
         minefield.printField();
 
         int minesFound = 0;
         int placesFlagged = 0;
+
+        boolean firstCheck = true;
+
         while (!(minesFound == numberOfMines && placesFlagged == numberOfMines)) {
             System.out.print("Set/unset mines marks or claim a cell as free (x and y coordinates): ");
             //********** ATENÇÃO! EIXOS X E Y TROCADOS! **********
-
-            String input = scanner.nextLine();
+            // b = Linha   a = Coluna
+            Scanner newerScanner = new Scanner(System.in);
+            String input = newerScanner.nextLine();
             String[] inputArray = input.split(" ");
-            int a = Integer.parseInt(inputArray[0]) - 1; //Coordenada "a" (-1 para ajustar à MineField) EIXO X COLUNAS
-            int b = Integer.parseInt(inputArray[1]) - 1; //Coordenada "b" (-1 para ajustar à MineField) EIXO Y LINHAS
+            //Inversão: Lê primeiro a coordenada "b"
+            int b = Integer.parseInt(inputArray[0]) - 1; //Coordenada "a" (-1 para ajustar à MineField) EIXO X COLUNAS
+            int a = Integer.parseInt(inputArray[1]) - 1; //Coordenada "b" (-1 para ajustar à MineField) EIXO Y LINHAS
             String command = inputArray[2];
             System.out.println();
 
+            if (command.equals("free")) {
+                while (minefield.hasMine(a, b) && firstCheck) {
+                    minefield = new MineField(height,width); //Para zerar as minas, cria uma nova instância de Minefield.
+                    minefield.addRandomMines(numberOfMines);
+                    minefield.updateMinesAlert();
+                }
+            }
+
             //SE O LOCAL ESCOLHIDO AINDA NÃO ESTIVER VISÍVEL
-            if (!minefield.isVisible(b, a).isVisible) {
+            if (!minefield.isVisible(a, b).isVisible) {
                 //COMANDO "mine"
                 if (command.equals("mine")) {
-                    if (!minefield.isFlagged(b, a)) {
+                    if (!minefield.isFlagged(a, b)) {
                         placesFlagged++;
-                        if (minefield.hasMine(b, a)) { //Para indicar contar a mina marcada corretamente.
+                        if (minefield.hasMine(a, b)) { //Para indicar contar a mina marcada corretamente.
                             minesFound++;
                         }
                     } else {
                         placesFlagged--;
-                        if (minefield.hasMine(b,a)) { //Para descontar a mina que estava marcada corretamente.
+                        if (minefield.hasMine(a, b)) { //Para descontar a mina que estava marcada corretamente.
                             minesFound--;
                         }
                     }
-                    minefield.toggleFlag(b, a);
+                    minefield.toggleFlag(a, b);
                     minefield.printField();
                 }
 
                 //COMANDO "free"
                 if (command.equals("free")) {
-                    minefield.revealNeighbors(b, a);
+                    minefield.revealNeighbors(a, b);
                     minefield.printField();
-                    if (minefield.hasMine(b, a)) { //Encerra o jogo.
+                    if (minefield.hasMine(a, b)) { //Encerra o jogo.
                         break;
                     } else {
                         //Conta a quantidade de Places visíveis e armazena na variável visibleFreePlaces
@@ -575,6 +588,8 @@ public class Main {
             else {
                 System.out.println("This place is already free!");
             }
+
+            firstCheck = false; //Indica que não é mais a primeira jogada e permite derrota.
         }
 
         if ((minesFound == numberOfMines && placesFlagged == numberOfMines) || (visibleFreePlaces == freePlaces)) {
